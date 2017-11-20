@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-//#define printf(fmt, ...) (0) // Uncomment to disable printf's.
+#define printf(fmt, ...) (0) // Uncomment to disable printf's.
 
-unsigned int cycles[256] = {
+unsigned char cycles[256] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // NOP, HLT, BBS, LCR, OR4, OR5, AN6, AN7, DB0, DB1, IR0, IR1, EIN, DIN, RPM, NOP (probably)
 	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, // JCN
 	2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1 // FIM (Even), SRC (Odd)
@@ -85,7 +85,7 @@ void runInstr(int opcode) {
 		case 0x03: // LCR
 			printf("LCR\n");
 			
-			acc = 0x08; //TODO: This is temporary unless instr is implemented correctly.
+			acc = 0x8; //TODO: This is temporary unless instr is implemented correctly.
 			printf("\tData RAM and ROM bank status loading into ACC is not yet fully implemented!\n");
 			unimplemented();
 		

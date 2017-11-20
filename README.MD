@@ -2,10 +2,10 @@
 This is an Intel 4040 emulator written in C.
 
 Please be aware that this emulator is in its beginning of development and not many features are emulated.
-There are only a few working CPU instructions, program counter, registers (from 2 banks), and accumulator support.
-Also keep in mind that I am a very rookie programmer and this may not be well made at all.
 
-**DO NOT USE** this emulator as a documentation source for this processor, at least for now.
+There are only a few working CPU instructions right now.
+
+**DO NOT USE** this emulator as a documentation source for this processor!!!
 
 # Compilation and running
 The IDE used for compiling and running this emulator is CodeLite with TDM-GCC-64 (GCC 5.1) compiler.
