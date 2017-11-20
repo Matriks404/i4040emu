@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define printf(fmt, ...) (0) // Uncomment to disable printf's.
+#define printf(fmt, ...) (0) // Comment this to disable printf's.
 
 unsigned char cycles[256] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // NOP, HLT, BBS, LCR, OR4, OR5, AN6, AN7, DB0, DB1, IR0, IR1, EIN, DIN, RPM, NOP (probably)
