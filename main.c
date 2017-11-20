@@ -2,24 +2,26 @@
 #include <stdlib.h>
 #include <time.h>
 
-unsigned char cycles[256] = {
+//#define printf(fmt, ...) (0) // Uncomment to disable printf's.
+
+unsigned int cycles[256] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // NOP, HLT, BBS, LCR, OR4, OR5, AN6, AN7, DB0, DB1, IR0, IR1, EIN, DIN, RPM, NOP (probably)
 	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, // JCN
+	2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1 // FIM (Even), SRC (Odd)
 };
 
-unsigned int pc = 0;
+unsigned int pc_stack[8];
+unsigned int ram_pointer;
 unsigned char acc = 0;
 
-unsigned int rombank = 0;
-unsigned int irbank = 0;
+unsigned char carry = 0; // False
+unsigned char test = 0; // False
 
-unsigned char ir0[16] = { // These are temporary values for registers.
-	0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0 // IR0-15 from IR0 bank
-};
+unsigned int rom_bank = 0;
+unsigned int ir_bank = 0;
 
-unsigned char ir1[8] = { // These are temporary values for registers.
-	0x0F, 0x1F, 0x2F, 0x3F, 0x4F, 0x5F, 0x6F, 0x7F // IR0-7 from IR1 bank
-};
+unsigned char ir0[16]; // IR0-15 from IR0 bank
+unsigned char ir1[8]; // IR0-7 from IR1 bank
 
 unsigned char memory[4096];
 
@@ -31,7 +33,7 @@ void clearRAM() {
 
 void resetRAM() { // This function is temporary used to randomize data in RAM to test CPU.
 	for(int i = 0; i < 4096; i++) {
-		memory[i] = rand() % 32;
+		memory[i] = rand() % 48;
 	}
 }
 
@@ -41,6 +43,24 @@ void unimplemented() {
 
 void jcnUnimplemented() {
 	printf("\tWARNING: JCN instructions are not yet implemented!!!\n");
+}
+
+void fim(unsigned char rpair, unsigned int data) {
+	if(ir_bank == 0) {
+		ir0[2 * rpair + 1] = memory[data] & 0xF;
+		ir0[2 * rpair] = memory[data] >> 0x4;
+	} else { // TODO: What happens after wrting to register > 7 in register bank 1?
+		ir1[2 * rpair + 1] = memory[data] & 0xF;
+		ir1[2 * rpair] = memory[data] >> 0x4;
+	}
+}
+
+void src(unsigned char rpair) {
+	if(ir_bank == 0) {
+		ram_pointer = ir0[2 * rpair] << 4 & 0xF0 | ir0[2 * rpair + 1] & 0xF;
+	} else { // TODO: What happens after reading from register > 7 in register bank 1?
+		ram_pointer = ir1[2 * rpair] << 4 & 0xF0 | ir1[2 * rpair + 1] & 0xF;
+	}
 }
 
 void runInstr(int opcode) {
@@ -65,7 +85,7 @@ void runInstr(int opcode) {
 		case 0x03: // LCR
 			printf("LCR\n");
 			
-			acc = 0x66; //TODO: This is temporary unless instr is implemented correctly.
+			acc = 0x08; //TODO: This is temporary unless instr is implemented correctly.
 			printf("\tData RAM and ROM bank status loading into ACC is not yet fully implemented!\n");
 			unimplemented();
 		
@@ -73,65 +93,65 @@ void runInstr(int opcode) {
 		case 0x04: // OR4
 			printf("OR4\n");
 			
-			if(irbank == 0) {
-				acc = acc | ir0[4];
+			if(ir_bank == 0) {
+				acc = (acc | ir0[4]) & 0xF;
 			} else {
-				acc = acc | ir1[4];
+				acc = (acc | ir1[4]) & 0xF;
 			}
 			
 			break;
 		case 0x05: // OR5
 			printf("OR5\n");
 			
-			if(irbank == 0) {
-				acc = acc | ir0[5];
+			if(ir_bank == 0) {
+				acc = (acc | ir0[5]) & 0xF;
 			} else {
-				acc = acc | ir1[5];
+				acc = (acc | ir1[5]) & 0xF;
 			}
 			
 			break;
 		case 0x06: // AN6
 			printf("AN6\n");
 			
-			if(irbank == 0) {
-				acc = acc & ir0[6];
+			if(ir_bank == 0) {
+				acc = (acc & ir0[6]) & 0xF;
 			} else {
-				acc = acc & ir1[6];
+				acc = (acc & ir1[6]) & 0xF;
 			}
 			
 			break;
 		case 0x07: // AN7
 			printf("AN7\n");
 			
-			if(irbank == 0) {
-				acc = acc & ir0[7];
+			if(ir_bank == 0) {
+				acc = (acc & ir0[7]) & 0xF;
 			} else {
-				acc = acc & ir1[7];
+				acc = (acc & ir1[7]) & 0xF;
 			}
 			
 			break;
 		case 0x08: // DB0
 			printf("DB0\n");
 			
-			rombank = 0;
+			rom_bank = 0;
 			
 			break;
 		case 0x09: // DB1
 			printf("DB1\n");
 			
-			rombank = 1;
+			rom_bank = 1;
 			
 			break;
 		case 0x0A: // IR0
 			printf("IR0\n");
 			
-			irbank = 0;
+			ir_bank = 0;
 			
 			break;
 		case 0x0B: // IR1
 			printf("IR1\n");
 			
-			irbank = 1;
+			ir_bank = 1;
 			
 			break;
 		case 0x0C: // EIN
@@ -255,46 +275,143 @@ void runInstr(int opcode) {
 			jcnUnimplemented();
 			
 			break;
+		case 0x20: // FIM 0
+			printf("FIM 0");
+			
+			fim(0, memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x21: // SRC 0
+			printf("SRC 0");
+			
+			src(0);
+			
+			break;
+		case 0x22: // FIM 2
+			printf("FIM 2");
+			
+			fim(1, memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x23: // SRC 2
+			printf("SRC 2");
+			
+			src(1);
+			
+			break;
+		case 0x24: // FIM 4
+			printf("FIM 4");
+			
+			fim(2, memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x25: // SRC 4
+			printf("SRC 4");
+			
+			src(2);
+			
+			break;
+		case 0x26: // FIM 6
+			printf("FIM 6");
+			
+			fim(3, memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x27: // SRC 6
+			printf("SRC 6");
+			
+			src(3);
+			
+			break;
+		case 0x28: // FIM 8
+			printf("FIM 8");
+			
+			fim(4, memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x29: // SRC 8
+			printf("SRC 8");
+			
+			src(4);
+			
+			break;
+		case 0x2A: // FIM 10
+			printf("FIM 10");
+			
+			fim(5, memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x2B: // SRC 10
+			printf("SRC 10");
+			
+			src(5);
+			
+			break;
+		case 0x2C: // FIM 12
+			printf("FIM 12");
+			
+			fim(6, memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x2D: // SRC 12
+			printf("SRC 12");
+			
+			src(6);
+			
+			break;
+		case 0x2E: // FIM 14
+			printf("FIM 14");
+			
+			fim(7, memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x2F: // SRC 14
+			printf("SRC 14");
+			
+			src(7);
+			
+			break;
 	}
 }
 
-void runCPU() {
-	while(pc < 50) {
-		printf("PC: %d\tROM bank: %d\tIR bank: %d\tACC: %-8x\n\n", pc, rombank, irbank, acc);
-		
-		printf("---IR0 bank---\n");
-		for(int i = 0; i < 16; i++) {
-			if(i < 10) {
-				printf("R%d:  %-8x", i, ir0[i]);
-			} else {
-				printf("R%d: %-8x", i, ir0[i]);
-			}
-			if(i % 8 == 7) printf("\n");
+void step() {
+	printf("PC: %d\tROM bank: %d\tIR bank: %d\tRAM pointer: %-8x\tACC: %-8x\n\n", pc_stack[0], rom_bank, ir_bank, ram_pointer, acc);
+	
+	printf("---IR0 bank---\n");
+	for(int i = 0; i < 16; i++) {
+		if(i < 10) {
+			printf("R%d:  %-8x", i, ir0[i]);
+		} else {
+			printf("R%d: %-8x", i, ir0[i]);
 		}
-		
-		printf("---IR1 bank---\n");
-		for(int i = 0; i < 8; i++) {
-			printf("R%d:  %-8x", i, ir1[i]);
-			if(i % 8 == 7) printf("\n");
-		}
-		
-		int opcode = memory[pc];
-		
-		printf("\nExecuted: ");
-		
-		runInstr(opcode);
-		
-		pc += cycles[opcode];
-		
-		printf("\n--------------------\n");
+		if(i % 8 == 7) printf("\n");
 	}
+	
+	printf("---IR1 bank---\n");
+	for(int i = 0; i < 8; i++) {
+		printf("R%d:  %-8x", i, ir1[i]);
+		if(i % 8 == 7) printf("\n");
+	}
+	
+	int opcode = memory[pc_stack[0]];
+	
+	printf("\nExecuted: ");
+	
+	runInstr(opcode);
+	
+	pc_stack[0] += cycles[opcode];
+	
+	printf("\n--------------------\n");
 }
 
 int main(int argc, char **argv) {
 	srand(time(NULL));
 	
 	resetRAM();
-	runCPU();
+	
+	unsigned int steps = 1000; // Change if you like.
+	
+	while(pc_stack[0] < steps) step();
 	
 	return 0;
 }
