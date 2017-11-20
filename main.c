@@ -48,8 +48,20 @@ void unimplemented() {
 	printf("\tWARNING: This instruction is not fully implemented!!!\n");
 }
 
-void jcn() {
-	printf("\tWARNING: JCN instruction is not yet implemented!!!\n");
+void jcn(unsigned char condition) {
+	if(condition & 0x4) {
+		if((!acc) ^ (condition & 0x8)) {
+			pc_stack[0] = memory[pc_stack[0] + 1];
+		}
+	} else if(condition & 0x2) {
+		if(carry ^ (condition & 0x8)) {
+			pc_stack[0] = memory[pc_stack[0] + 1];
+		}
+	} else if(condition & 0x1) {
+		if(test ^ (condition & 0x8)) {
+			pc_stack[0] = memory[pc_stack[0] + 1];
+		}
+	}
 }
 
 void fim(unsigned char rpair, unsigned int data) {
@@ -209,97 +221,97 @@ void runInstr(int opcode) {
 		case 0x10: // JCN, CN = 0
 			printf("JCN, CN=0\n");
 			
-			jcn();
+			jcn(0);
 			
 			break;
 		case 0x11: // JCN, CN = 1 also JNT
 			printf("JCN, CN=1\n");
 			
-			jcn();
+			jcn(1);
 			
 			break;
 		case 0x12: // JCN, CN = 2 also JC
 			printf("JCN, CN=2\n");
 			
-			jcn();
+			jcn(2);
 			
 			break;
 		case 0x13: // JCN, CN = 3
 			printf("JCN, CN=3\n");
 			
-			jcn();
+			jcn(3);
 			
 			break;
 		case 0x14: // JCN, CN = 4 also JZ
 			printf("JCN, CN=4\n");
 			
-			jcn();
+			jcn(4);
 			
 			break;
 		case 0x15: // JCN, CN = 5
 			printf("JCN, CN=5\n");
 			
-			jcn();
+			jcn(5);
 			
 			break;
 		case 0x16: // JCN, CN = 6
 			printf("JCN, CN=6\n");
 			
-			jcn();
+			jcn(6);
 			
 			break;
 		case 0x17: // JCN, CN = 7
 			printf("JCN, CN=7\n");
 			
-			jcn();
+			jcn(7);
 			
 			break;
 		case 0x18: // JCN, CN = 8
 			printf("JCN, CN=8\n");
 			
-			jcn();
+			jcn(8);
 			
 			break;
 		case 0x19: // JCN, CN = 9 also JT
 			printf("JCN, CN=9\n");
 			
-			jcn();
+			jcn(9);
 			
 			break;
 		case 0x1A: // JCN, CN = 10 also JNC
 			printf("JCN, CN=10\n");
 			
-			jcn();
+			jcn(10);
 			
 			break;
 		case 0x1B: // JCN, CN = 11
 			printf("JCN, CN=11\n");
 			
-			jcn();
+			jcn(11);
 			
 			break;
 		case 0x1C: // JCN, CN = 12 also JNZ
 			printf("JCN, CN=12\n");
 			
-			jcn();
+			jcn(12);
 			
 			break;
 		case 0x1D: // JCN, CN = 13
 			printf("JCN, CN=13\n");
 			
-			jcn();
+			jcn(13);
 			
 			break;
 		case 0x1E: // JCN, CN = 14
 			printf("JCN, CN=14\n");
 			
-			jcn();
+			jcn(14);
 			
 			break;
 		case 0x1F: // JCN, CN = 15
 			printf("JCN, CN=15\n");
 			
-			jcn();
+			jcn(15);
 			
 			break;
 		case 0x20: // FIM 0
