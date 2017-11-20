@@ -7,7 +7,11 @@
 unsigned char cycles[256] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // NOP, HLT, BBS, LCR, OR4, OR5, AN6, AN7, DB0, DB1, IR0, IR1, EIN, DIN, RPM, NOP (probably)
 	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, // JCN
-	2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1 // FIM (Even), SRC (Odd)
+	2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, // FIM (Even), SRC (Odd)
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // FIN
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // JIN
+	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, // JUN
+	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, // JMS
 };
 
 unsigned int pc_stack[8];
@@ -25,6 +29,9 @@ unsigned char ir1[8]; // IR0-7 from IR1 bank
 
 unsigned char memory[4096];
 
+unsigned int steps = 100; // Change if you like.
+unsigned int current_steps = 0;
+
 void clearRAM() {
 	for(int i = 0; i< 4096; i++) {
 		memory[i] = 0;
@@ -33,7 +40,7 @@ void clearRAM() {
 
 void resetRAM() { // This function is temporary used to randomize data in RAM to test CPU.
 	for(int i = 0; i < 4096; i++) {
-		memory[i] = rand() % 48;
+		memory[i] = rand() % 80; // TODO: 96
 	}
 }
 
@@ -41,8 +48,8 @@ void unimplemented() {
 	printf("\tWARNING: This instruction is not fully implemented!!!\n");
 }
 
-void jcnUnimplemented() {
-	printf("\tWARNING: JCN instructions are not yet implemented!!!\n");
+void jcn() {
+	printf("\tWARNING: JCN instruction is not yet implemented!!!\n");
 }
 
 void fim(unsigned char rpair, unsigned int data) {
@@ -61,6 +68,26 @@ void src(unsigned char rpair) {
 	} else { // TODO: What happens after reading from register > 7 in register bank 1?
 		ram_pointer = ir1[2 * rpair] << 4 & 0xF0 | ir1[2 * rpair + 1] & 0xF;
 	}
+}
+
+void fin(unsigned char rpair) {
+	printf("\tWARNING: FIN instruction is not yet implemented!!!\n");
+}
+
+void jin(unsigned char rpair) {
+	if(ir_bank == 0) {
+		pc_stack[0] = (pc_stack[0] & 0xF00 | (ir0[2 * rpair] << 4 & 0xF0 | ir0[2 * rpair + 1 & 0xF])) - 1;
+	} else { // TODO: What happens after reading from register > 7 in register bank 1?
+		pc_stack[0] = (pc_stack[0] & 0xF00 | (ir1[2 * rpair] << 4 & 0xF0 | ir1[2 * rpair + 1 & 0xF])) - 1;
+	}
+	
+	// TODO: test bit?
+}
+
+void jun(unsigned short address) {
+	pc_stack[0] = address - 0x1;
+	
+	// TODO: test bit?
 }
 
 void runInstr(int opcode) {
@@ -182,167 +209,167 @@ void runInstr(int opcode) {
 		case 0x10: // JCN, CN = 0
 			printf("JCN, CN=0\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x11: // JCN, CN = 1 also JNT
 			printf("JCN, CN=1\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x12: // JCN, CN = 2 also JC
 			printf("JCN, CN=2\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x13: // JCN, CN = 3
 			printf("JCN, CN=3\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x14: // JCN, CN = 4 also JZ
 			printf("JCN, CN=4\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x15: // JCN, CN = 5
 			printf("JCN, CN=5\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x16: // JCN, CN = 6
 			printf("JCN, CN=6\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x17: // JCN, CN = 7
 			printf("JCN, CN=7\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x18: // JCN, CN = 8
 			printf("JCN, CN=8\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x19: // JCN, CN = 9 also JT
 			printf("JCN, CN=9\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x1A: // JCN, CN = 10 also JNC
 			printf("JCN, CN=10\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x1B: // JCN, CN = 11
 			printf("JCN, CN=11\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x1C: // JCN, CN = 12 also JNZ
 			printf("JCN, CN=12\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x1D: // JCN, CN = 13
 			printf("JCN, CN=13\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x1E: // JCN, CN = 14
 			printf("JCN, CN=14\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x1F: // JCN, CN = 15
 			printf("JCN, CN=15\n");
 			
-			jcnUnimplemented();
+			jcn();
 			
 			break;
 		case 0x20: // FIM 0
-			printf("FIM 0");
+			printf("FIM 0\n");
 			
 			fim(0, memory[pc_stack[0] + 1]);
 			
 			break;
 		case 0x21: // SRC 0
-			printf("SRC 0");
+			printf("SRC 0\n");
 			
 			src(0);
 			
 			break;
 		case 0x22: // FIM 2
-			printf("FIM 2");
+			printf("FIM 2\n");
 			
 			fim(1, memory[pc_stack[0] + 1]);
 			
 			break;
 		case 0x23: // SRC 2
-			printf("SRC 2");
+			printf("SRC 2\n");
 			
 			src(1);
 			
 			break;
 		case 0x24: // FIM 4
-			printf("FIM 4");
+			printf("FIM 4\n");
 			
 			fim(2, memory[pc_stack[0] + 1]);
 			
 			break;
 		case 0x25: // SRC 4
-			printf("SRC 4");
+			printf("SRC 4\n");
 			
 			src(2);
 			
 			break;
 		case 0x26: // FIM 6
-			printf("FIM 6");
+			printf("FIM 6\n");
 			
 			fim(3, memory[pc_stack[0] + 1]);
 			
 			break;
 		case 0x27: // SRC 6
-			printf("SRC 6");
+			printf("SRC 6\n");
 			
 			src(3);
 			
 			break;
 		case 0x28: // FIM 8
-			printf("FIM 8");
+			printf("FIM 8\n");
 			
 			fim(4, memory[pc_stack[0] + 1]);
 			
 			break;
 		case 0x29: // SRC 8
-			printf("SRC 8");
+			printf("SRC 8\n");
 			
 			src(4);
 			
 			break;
 		case 0x2A: // FIM 10
-			printf("FIM 10");
+			printf("FIM 10\n");
 			
 			fim(5, memory[pc_stack[0] + 1]);
 			
 			break;
 		case 0x2B: // SRC 10
-			printf("SRC 10");
+			printf("SRC 10\n");
 			
 			src(5);
 			
@@ -354,28 +381,221 @@ void runInstr(int opcode) {
 			
 			break;
 		case 0x2D: // SRC 12
-			printf("SRC 12");
+			printf("SRC 12\n");
 			
 			src(6);
 			
 			break;
 		case 0x2E: // FIM 14
-			printf("FIM 14");
+			printf("FIM 14\n");
 			
 			fim(7, memory[pc_stack[0] + 1]);
 			
 			break;
 		case 0x2F: // SRC 14
-			printf("SRC 14");
+			printf("SRC 14\n");
 			
 			src(7);
+			
+			break;
+		case 0x30: // FIN 0
+			printf("FIN 0\n");
+			
+			fin(0);
+			
+			break;
+		case 0x31: // JIN 0
+			printf("JIN 0\n");
+			
+			jin(0);
+			
+			break;
+		case 0x32: // FIN 2
+			printf("FIN 2\n");
+			
+			fin(1);
+			
+			break;
+		case 0x33: // JIN 2
+			printf("JIN 2\n");
+			
+			jin(1);
+			
+			break;
+		case 0x34: // FIN 4
+			printf("FIN 4\n");
+			
+			fin(2);
+			
+			break;
+		case 0x35: // JIN 4
+			printf("JIN 4\n");
+			
+			jin(2);
+			
+			break;
+		case 0x36: // FIN 6
+			printf("FIN 6\n");
+			
+			fin(3);
+			
+			break;
+		case 0x37: // JIN 6
+			printf("JIN 6\n");
+			
+			jin(3);
+			
+			break;
+		case 0x38: // FIN 8
+			printf("FIN 8\n");
+			
+			fin(4);
+			
+			break;
+		case 0x39: // JIN 8
+			printf("JIN 8\n");
+			
+			jin(4);
+			
+			break;
+		case 0x3A: // FIN 10
+			printf("FIN 10\n");
+			
+			fin(5);
+			
+			break;
+		case 0x3B: // JIN 10
+			printf("JIN 10\n");
+			
+			jin(5);
+			
+			break;
+		case 0x3C: // FIN 12
+			printf("FIN 12\n");
+			
+			fin(6);
+			
+			break;
+		case 0x3D: // JIN 12
+			printf("JIN 12\n");
+			
+			jin(6);
+			
+			break;
+		case 0x3E: // FIN 14
+			printf("FIN 14\n");
+			
+			fin(7);
+			
+			break;
+		case 0x3F: // JIN 14
+			printf("JIN 14\n");
+			
+			jin(7);
+			
+			break;
+		case 0x40: // JUN 0
+			printf("JUN 0\n");
+			
+			jun((0x0 << 8) + memory[pc_stack[0] + 1]);
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			break;
+		case 0x41: // JUN 1
+			printf("JUN 1\n");
+			
+			jun((0x1 << 8) + memory[pc_stack[0] + 1]);
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			break;
+		case 0x42: // JUN 2
+			printf("JUN 2\n");
+			
+			jun((0x2 << 8) + memory[pc_stack[0] + 1]);
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			break;
+		case 0x43: // JUN 3
+			printf("JUN 3\n");
+			
+			jun((0x3 << 8) + memory[pc_stack[0] + 1]);
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			break;
+		case 0x44: // JUN 4
+			printf("JUN 4\n");
+			
+			jun((0x4 << 8) + memory[pc_stack[0] + 1]);
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			break;
+		case 0x45: // JUN 5
+			printf("JUN 5\n");
+			
+			jun((0x5 << 8) + memory[pc_stack[0] + 1]);
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			break;
+		case 0x46: // JUN 6
+			printf("JUN 6\n");
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			jun((0x6 << 8) + memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x47: // JUN 7
+			printf("JUN 7\n");
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			jun((0x7 << 8) + memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x48: // JUN 8
+			printf("JUN 8\n");
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			jun((0x8 << 8) + memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x49: // JUN 9
+			printf("JUN 9\n");
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			jun((0x9 << 8) + memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x4A: // JUN 10
+			printf("JUN 10\n");
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			jun((0xA << 8) + memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x4B: // JUN 11
+			printf("JUN 11\n");
+			
+			jun((0xB << 8) + memory[pc_stack[0] + 1]);
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			break;
+		case 0x4C: // JUN 12
+			printf("JUN 12\n");
+			
+			jun((0xC << 8) + memory[pc_stack[0] + 1]);
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			break;
+		case 0x4D: // JUN 13
+			printf("JUN 13\n");
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			jun((0xD << 8) + memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x4E: // JUN 14
+			printf("JUN 14\n");
+			printf("data: %08x", memory[pc_stack[0] + 1]);
+			jun((0xE << 8) + memory[pc_stack[0] + 1]);
+			
+			break;
+		case 0x4F: // JUN 15
+			printf("JUN 15\n");
+			
+			jun((0xF << 8) + memory[pc_stack[0] + 1]);
+			printf("data: %08x", memory[pc_stack[0] + 1]);
 			
 			break;
 	}
 }
 
 void step() {
-	printf("PC: %d\tROM bank: %d\tIR bank: %d\tRAM pointer: %-8x\tACC: %-8x\n\n", pc_stack[0], rom_bank, ir_bank, ram_pointer, acc);
+	printf("PC: %08x\tROM bank: %d\tIR bank: %d\tRAM pointer: %08x\tACC: %-8x\n\n", pc_stack[0], rom_bank, ir_bank, ram_pointer, acc);
 	
 	printf("---IR0 bank---\n");
 	for(int i = 0; i < 16; i++) {
@@ -393,25 +613,24 @@ void step() {
 		if(i % 8 == 7) printf("\n");
 	}
 	
-	int opcode = memory[pc_stack[0]];
+	unsigned int opcode = memory[pc_stack[0]];
 	
 	printf("\nExecuted: ");
 	
 	runInstr(opcode);
 	
 	pc_stack[0] += cycles[opcode];
+	current_steps++;
 	
 	printf("\n--------------------\n");
 }
 
 int main(int argc, char **argv) {
 	srand(time(NULL));
-	
+
 	resetRAM();
-	
-	unsigned int steps = 1000; // Change if you like.
-	
-	while(pc_stack[0] < steps) step();
+
+	while(current_steps < steps) step();
 	
 	return 0;
 }
